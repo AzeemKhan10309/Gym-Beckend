@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Admin from '../../beckend/Models/adminModel.js';
+import Admin from '../Models/adminModel.js';
 
 
 export const verifyToken = (req, res, next) => {
