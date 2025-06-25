@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import {} from "../../controllers/Membership/membershipController.js";
-import { registerMembership, getAllMemberships, getMembershipById, updateMembership ,deleteMembership} from "../../controllers/Membership/membershipController.js";
+import { registerMembership, getAllMemberships, getMembershipById, updateMembership ,deleteMembership } from "../../controllers/Membership/membershipController.js";
 import { verifyToken } from "../../middleware/authMiddleware.js";
 
 // Route to register a new membership

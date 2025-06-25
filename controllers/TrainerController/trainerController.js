@@ -1,4 +1,5 @@
 import Trainer from "../../Models/trainerModel.js";
+import Member from "../../Models/membersModel.js"
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 export const registerTrainer = async (req, res) => {
@@ -142,3 +143,18 @@ export const deleteTrainer = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
+export const getMembersByTrainer = async (req, res) => {
+  try {
+    const { trainerId } = req.params;
+        
+     if (!mongoose.Types.ObjectId.isValid(trainerId)) {
+      return res.status(400).json({ message: "Invalid trainer ID" });
+    }
+    const members = await Member.find({ trainer_id: trainerId}).populate('membership_plan_id').populate('assignedWorkoutPlan')
+  .populate('assignedDietPlan'); 
+    res.status(200).json(members);
+  } catch (error) {
+    console.error("Error fetching members:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

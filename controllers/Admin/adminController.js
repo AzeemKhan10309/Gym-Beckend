@@ -1,4 +1,6 @@
 import Admin from "../../Models/adminModel.js";
+import Trainer from "../../Models/trainerModel.js"
+import User from "../../Models/membersModel.js"
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -33,30 +35,52 @@ export const registerAdmin = async (req, res) => {
 }
 
 export const loginAdmin = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        const admin = await Admin.findOne({ email });
-        if (!admin) {
-            return res.status(404).json({ message: "Admin not found" });
-        }               
-        const isPasswordValid = await bcrypt.compare(password, admin.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: "Invalid password" });
-        }       
-        const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({
-            message: "Admin logged in successfully",
-            admin: {
-                id: admin._id,
-                name: admin.name,
-                email: admin.email
-            },
-            token
-        });
+  try {
+    let person = await Admin.findOne({ email });
+    let role = "admin";
+
+    if (!person) {
+      person = await Trainer.findOne({ email });
+      role = "trainer";
     }
-    catch (error) {
-        console.error("Error logging in admin:", error);
-        res.status(500).json({ message: "Internal server error" });
+
+    if (!person) {
+      person = await User.findOne({ email });
+      role = "user";
     }
-}
+
+    if (!person) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, person.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // ✅ Include name and role in token
+    const token = jwt.sign(
+      { id: person._id, name: person.name, role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} logged in successfully`,
+      user: {
+        id: person._id,
+        name: person.name,
+        email: person.email,
+        role,
+      },
+      token,
+    });
+
+  } catch (error) {
+    console.error("Error logging in admin:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

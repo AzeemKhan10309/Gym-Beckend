@@ -1,9 +1,25 @@
 import mongoose from 'mongoose';
-const DietPlanSchema = new mongoose.Schema({
-  member_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Member', required: true },
-  trainer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Trainer', required: true },
-  description: { type: String },
-  created_date: { type: Date, default: Date.now }
+
+const mealSchema = new mongoose.Schema({
+  day: { type: String, required: true },
+  breakfast: String,
+  midMorningSnack: String,
+  lunch: String,
+  eveningSnack: String,
+  dinner: String,
+  postDinnerSnack: String,
 });
 
- export default mongoose.model('DietPlan', DietPlanSchema);
+const DietPlanSchema = new mongoose.Schema({
+  planName: { type: String, required: true },
+  trainerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Trainer',
+    required: true,
+  },
+  assignedDietPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'DietPlan' },
+
+  diet: [mealSchema], 
+});
+
+export default mongoose.model('DietPlan', DietPlanSchema);

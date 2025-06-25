@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { createDietPlanforspecific, getAllDietPlans,getDietPlanById,updateDietPlan,deleteDietPlan,createWorkoutPlan,getAllWorkoutPlans,getWorkoutPlanById,updateWorkoutPlan,deleteWorkoutPlan} from '../../controllers/Workout&Meal/workout&mealsController.js';
+import { createDietPlanforspecific, getAllDietPlans,getDietPlanById,updateDietPlan,deleteDietPlan,createWorkoutPlan,getAllWorkoutPlans,getWorkoutPlanById,updateWorkoutPlan,deleteWorkoutPlan,assignPlansToMember} from '../../controllers/Workout&Meal/workout&mealsController.js';
 
 import { verifyToken } from '../../middleware/authMiddleware.js';
 
@@ -17,5 +17,6 @@ router.get('/diet', verifyToken, getAllDietPlans);
 router.get('/diet/:id', verifyToken, getDietPlanById);
 router.put('/diet/:id', verifyToken, updateDietPlan);
 router.delete('/diet/:id', verifyToken, deleteDietPlan);
+router.put('/:id/assignPlans', verifyToken, assignPlansToMember);
 
 export default router;

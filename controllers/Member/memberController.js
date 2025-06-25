@@ -204,5 +204,24 @@ export const getMemberPaymentDetails = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+// GET /api/members/:id
+export const getMemberDetails = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const member = await Member.findById(id).populate("membership_plan_id", "planName").populate("trainer_id", "name").populate("assignedDietPlan","planName diet").populate("assignedWorkoutPlan", "title days")
+
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    res.status(200).json(member);
+  } catch (error) {
+    console.error("Error fetching member:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
 
 

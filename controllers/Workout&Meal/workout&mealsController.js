@@ -1,35 +1,41 @@
 import DietPlan from "../../Models/dietPlanModel.js";
 import { verifyToken } from "../../middleware/authMiddleware.js";
 import WorkoutPlan from "../../Models/workoutModel.js";
+import Member from '../../Models/membersModel.js';
 
 
 
 
 export const createDietPlanforspecific = async (req, res) => {
-    const { memberId, dietType, meals } = req.body;
+  try {
+    // Destructure correctly from req.body
+    const { trainerId, planName, diet } = req.body;
 
-    try {
-        const newDietPlan = new DietPlan({
-            memberId,
-            dietType,
-            meals
-        });
-
-        await newDietPlan.save();
-        res.status(201).json({
-            message: "Diet plan created successfully",
-            dietPlan: {
-                id: newDietPlan._id,
-                memberId: newDietPlan.memberId,
-                dietType: newDietPlan.dietType,
-                meals: newDietPlan.meals
-            }
-        });
-    } catch (error) {
-        console.error("Error creating diet plan:", error);
-        res.status(500).json({ message: "Internal server error" });
+    // Check required fields
+    if (!trainerId || !planName || !diet) {
+      return res.status(400).json({ message: "trainerId, planName, and diet are required" });
     }
-}       
+
+    // Create new diet plan
+    const newDietPlan = new DietPlan({
+      trainerId,
+      planName,
+      diet
+    });
+
+    // Save to database
+    await newDietPlan.save();
+
+    // Return success
+    res.status(201).json({
+      message: "Diet plan created successfully",
+      dietPlan: newDietPlan
+    });
+  } catch (error) {
+    console.error("Error creating diet plan:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};     
 export const getAllDietPlans = async (req, res) => {
     try {
         const dietPlans = await DietPlan.find();
@@ -54,27 +60,34 @@ export const getDietPlanById = async (req, res) => {
     }
 }
 export const updateDietPlan = async (req, res) => {
-    const { id } = req.params;
-    const { dietType, meals } = req.body;
+  const { id } = req.params;
+  const { planName, trainerId, diet } = req.body;
 
-    try {
-        const updatedDietPlan = await DietPlan.findByIdAndUpdate(
-            id,
-            { dietType, meals },
-            { new: true }
-        );
-        if (!updatedDietPlan) {
-            return res.status(404).json({ message: "Diet plan not found" });
-        }
-        res.status(200).json({
-            message: "Diet plan updated successfully",
-            dietPlan: updatedDietPlan
-        });
-    } catch (error) {
-        console.error("Error updating diet plan:", error);
-        res.status(500).json({ message: "Internal server error" });
+  try {
+    const updatedDietPlan = await DietPlan.findByIdAndUpdate(
+      id,
+      {
+        planName,
+        trainerId,
+        diet,
+      },
+      { new: true }
+    );
+
+    if (!updatedDietPlan) {
+      return res.status(404).json({ message: "Diet plan not found" });
     }
-}       
+
+    res.status(200).json({
+      message: "Diet plan updated successfully",
+      dietPlan: updatedDietPlan,
+    });
+  } catch (error) {
+    console.error("Error updating diet plan:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+       
 export const deleteDietPlan = async (req, res) => {
     const { id } = req.params;
 
@@ -92,34 +105,57 @@ export const deleteDietPlan = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
-export const createWorkoutPlan = async (req, res) => {
-    const { memberId, workoutType, exercises } = req.body;
 
-    try {
-        const newWorkoutPlan = new WorkoutPlan({
-            memberId,
-            workoutType,
-            exercises
-        });
+// controllers/workoutController.js
 
-        await newWorkoutPlan.save();
-        res.status(201).json({
-            message: "Workout plan created successfully",
-            workoutPlan: {
-                id: newWorkoutPlan._id,
-                memberId: newWorkoutPlan.memberId,
-                workoutType: newWorkoutPlan.workoutType,
-                exercises: newWorkoutPlan.exercises
-            }
-        });
-    } catch (error) {
-        console.error("Error creating workout plan:", error);
-        res.status(500).json({ message: "Internal server error" });
+
+export const createWorkoutPlan = async (req, res) => {  try {
+    const { title, goals, days, isPublic } = req.body;
+    const trainerId = req.user.id; // assuming you use auth middleware that sets req.user
+
+    if (!title || !days || !Array.isArray(days)) {
+      return res.status(400).json({ message: 'Title and valid days are required' });
     }
-}
+
+    // Basic validation for exercises inside days
+    for (const day of days) {
+      if (!day.day || !Array.isArray(day.exercises)) {
+        return res.status(400).json({ message: 'Each day must have a name and exercises array' });
+      }
+
+      for (const exercise of day.exercises) {
+        if (!exercise.name || !exercise.sets || !exercise.reps) {
+          return res.status(400).json({ message: 'Each exercise must have name, sets, and reps' });
+        }
+      }
+    }
+
+    const newPlan = new WorkoutPlan({
+      title,
+      goals,
+      isPublic,
+      created_by: trainerId,
+      days
+    });
+
+    await newPlan.save();
+
+    return res.status(201).json({
+      message: 'Workout plan created successfully',
+      workoutPlan: newPlan,
+    });
+
+  } catch (error) {
+    console.error('Error creating workout plan:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+
 export const getAllWorkoutPlans = async (req, res) => {
     try {
-        const workoutPlans = await WorkoutPlan.find();
+        const workoutPlans = await WorkoutPlan.find({ created_by: req.user.id });;
         res.status(200).json(workoutPlans);
     } catch (error) {
         console.error("Error fetching workout plans:", error);
@@ -141,27 +177,29 @@ export const getWorkoutPlanById = async (req, res) => {
     }
 }
 export const updateWorkoutPlan = async (req, res) => {
-    const { id } = req.params;
-    const { workoutType, exercises } = req.body;
+  try {
+    const plan = await WorkoutPlan.findById(req.params.id);
 
-    try {
-        const updatedWorkoutPlan = await WorkoutPlan.findByIdAndUpdate(
-            id,
-            { workoutType, exercises },
-            { new: true }
-        );
-        if (!updatedWorkoutPlan) {
-            return res.status(404).json({ message: "Workout plan not found" });
-        }
-        res.status(200).json({
-            message: "Workout plan updated successfully",
-            workoutPlan: updatedWorkoutPlan
-        });
-    } catch (error) {
-        console.error("Error updating workout plan:", error);
-        res.status(500).json({ message: "Internal server error" });
+    if (!plan) {
+      return res.status(404).json({ message: 'Workout plan not found' });
     }
-}   
+
+    // Optional: if you are using auth-based user
+    if (plan.user && plan.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this plan' });
+    }
+
+    plan.title = req.body.title || plan.title;
+    plan.days = req.body.days || plan.days;
+
+    await plan.save();
+    res.status(200).json({ message: 'Workout plan updated', plan });
+  } catch (error) {
+    console.error('Error updating workout plan:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const deleteWorkoutPlan = async (req, res) => {
     const { id } = req.params;
 
@@ -179,3 +217,18 @@ export const deleteWorkoutPlan = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
+export const assignPlansToMember = async (req, res) => {
+const { id } = req.params;
+  const { workoutPlanId, dietPlanId } = req.body;
+
+  const updated = await Member.findByIdAndUpdate(
+    id,
+    {
+      ...(workoutPlanId && { assignedWorkoutPlan: workoutPlanId }),
+      ...(dietPlanId && { assignedDietPlan: dietPlanId }),
+    },
+    { new: true }
+  );
+
+  res.status(200).json({ message: "Plans assigned", member: updated });
+};

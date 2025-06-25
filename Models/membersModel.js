@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 const MemberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -11,12 +12,17 @@ const MemberSchema = new mongoose.Schema({
   trainer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Trainer', required: false },
   password: { type: String, required: true },
   isFeePaid: { type: Boolean, default: false },
+  special_code: { type: String, unique: true, required: false },
+  progressNote: { type: String, default: "" },
 
-  special_code: {
-  type: String,
-  unique: true,
-  required: false
-}
+  assignedWorkoutPlan: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'WorkoutPlan',
+  },
+  assignedDietPlan: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DietPlan',
+  },
 });
 
 export default mongoose.model('Member', MemberSchema);
