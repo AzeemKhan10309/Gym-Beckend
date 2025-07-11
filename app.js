@@ -13,7 +13,7 @@ import cors from 'cors';
 
 dotenv.config(); 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors({
   origin: ['http://localhost:8081', 'http://localhost:5173', 'http://192.168.43.237:8081'], 
@@ -41,6 +41,9 @@ app.use('/api/workoutmeals', workoutmeals);
 app.use('/api/messages', messageRoutes);
 
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://192.168.43.237:${PORT}`);
+//app.listen(PORT, '0.0.0.0', () => {
+  //console.log(`Server is running on http://192.168.43.237:${PORT}`);
+//});
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
 });
