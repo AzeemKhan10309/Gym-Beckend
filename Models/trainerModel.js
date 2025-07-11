@@ -6,6 +6,8 @@ const TrainerSchema = new mongoose.Schema({
   fee: { type: Number, required: true },
   expertise: { type: String },
   password: { type: String, required: true },
+    experience: String,
+
   working_hours: { type: String }
 });
 

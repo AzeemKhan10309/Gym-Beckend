@@ -3,7 +3,7 @@ import Member from "../../Models/membersModel.js"
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 export const registerTrainer = async (req, res) => {
-    const { name, email, phone, fee, expertise, password, working_hours } = req.body;
+    const { name, email, phone, fee, expertise, password, working_hours,experience } = req.body;
 
     try {
         const existingTrainer = await Trainer.findOne({ email });
@@ -18,7 +18,8 @@ export const registerTrainer = async (req, res) => {
             fee,
             expertise,
             password: hashedPassword,
-            working_hours
+            working_hours,
+            experience
         });
         await newTrainer.save();
         res.status(201).json({
@@ -98,7 +99,7 @@ export const getTrainerById = async (req, res) => {
 }
 export const updateTrainer = async (req, res) => {
     const { id } = req.params;
-    const { name, email, phone,fee, expertise, working_hours } = req.body;
+    const { name, email, phone,fee, expertise, working_hours ,experience} = req.body;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid trainer ID" });
     }
@@ -109,7 +110,8 @@ export const updateTrainer = async (req, res) => {
             phone,
             fee,
             expertise,
-            working_hours
+            working_hours,
+            experience
         }, { new: true });
 
         if (!updatedTrainer) {
@@ -125,6 +127,8 @@ export const updateTrainer = async (req, res) => {
     }
 }
 export const deleteTrainer = async (req, res) => {
+    console.log("DELETE request body:", req.body);
+
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid trainer ID" });

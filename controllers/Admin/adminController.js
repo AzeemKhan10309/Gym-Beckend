@@ -35,6 +35,8 @@ export const registerAdmin = async (req, res) => {
 }
 
 export const loginAdmin = async (req, res) => {
+    console.log("📥 Received Login Request:", req.body);  // 👈 Add this line
+
   const { email, password } = req.body;
 
   try {
@@ -60,7 +62,6 @@ export const loginAdmin = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // ✅ Include name and role in token
     const token = jwt.sign(
       { id: person._id, name: person.name, role },
       process.env.JWT_SECRET,

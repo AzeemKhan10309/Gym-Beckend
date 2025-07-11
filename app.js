@@ -1,4 +1,3 @@
-// app.js
 import express from 'express';
 import connectDB from './db/db.js'; 
 import adminRoutes from './Routes/Admin/adminRoutes.js';
@@ -8,42 +7,40 @@ import paymentRoutes from "./Routes/Payment/paymentRoutes.js";
 import attendenceRoutes from "./Routes/Attendence/attendenceRoutes.js";
 import workoutmeals from "./Routes/Workout&Meal/workout&mealRoutes.js";
 import memberShip from "./Routes/Membership/membershipRoutes.js";
+import messageRoutes from "./Routes/Message/Message.js";
 import dotenv from 'dotenv';
 import cors from 'cors';
-const app = express();
-
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
-}));
-       
 
 dotenv.config(); 
+const app = express();
 const PORT = 3000;
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:8081', 'http://localhost:5173', 'http://192.168.43.237:8081'], 
+  credentials: true,
+}));
+app.use('/api/members', memberRoutes);
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+app.use('/uploads', express.static('uploads'));
+
 connectDB();
 
-// Define a simple route
 app.get('/', (req, res) => {
   res.send('Hello, Express!');
 });
-// Import admin routes
+
 app.use('/api', adminRoutes);
-// Import trainer routes
 app.use('/api/trainers', trainerRoutes);
-// Import member routes
-app.use('/api/members', memberRoutes);
-// Import membership routes
 app.use('/api/memberships', memberShip);
-// Import payment routes
 app.use('/api/payments', paymentRoutes);
-// Import attendance routes
 app.use('/api/attendance', attendenceRoutes);
-// Import workout and meal routes
 app.use('/api/workoutmeals', workoutmeals);
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.use('/api/messages', messageRoutes);
+
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://192.168.43.237:${PORT}`);
 });

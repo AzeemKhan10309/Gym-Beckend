@@ -4,8 +4,8 @@ import { markAttendance, getAllAttendance,getAttendanceById , updateAttendance, 
 import { verifyToken } from '../../middleware/authMiddleware.js';
 
 
-router.post('/', verifyToken, markAttendance);
-router.post('/', verifyToken, getAllAttendance);
+router.post('/mark/:memberId', verifyToken, markAttendance);
+router.get('/', verifyToken, getAllAttendance);
 router.get('/:id', verifyToken, getAttendanceById);
 router.put('/:id', verifyToken, updateAttendance);
 router.delete('/:id', verifyToken, deleteAttendance);

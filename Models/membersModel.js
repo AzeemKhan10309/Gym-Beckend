@@ -23,6 +23,12 @@ const MemberSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'DietPlan',
   },
+  profileImage: {
+  type: String, 
+},
+qrCode: {
+  type: String,
+}
 });
 
 export default mongoose.model('Member', MemberSchema);

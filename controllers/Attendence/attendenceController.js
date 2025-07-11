@@ -1,56 +1,64 @@
 import Attendance from "../../Models/attendanceModel.js";
 import { verifyToken } from "../../middleware/authMiddleware.js";
+import Member from "../../Models/membersModel.js";
 import mongoose from 'mongoose';
 
 export const markAttendance = async (req, res) => {
-  const { memberId, date, status } = req.body;
-    console.log("Request body:", req.body); // Log incoming data
-
-  if (!memberId || !status) {
-    return res.status(400).json({ message: "memberId and status are required" });
-  }
-
-  const attendanceDate = date ? new Date(date) : new Date();
-  const startOfDay = new Date(attendanceDate.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(attendanceDate.setHours(23, 59, 59, 999));
+  const memberId = req.params.memberId;
 
   try {
-    const existing = await Attendance.findOne({
-      memberId,
-      date: { $gte: startOfDay, $lte: endOfDay }
-    });
+    const member = await Member.findById(memberId)
+      .populate('trainer_id')
+      .populate('membership_plan_id');
 
-    if (existing) {
-      return res.status(409).json({ message: "Attendance already marked for today." });
+    if (!member) {
+      return res.status(404).json({ message: 'Member not found' });
     }
 
-    const marked_by = req.user.id; 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const alreadyMarked = await Attendance.findOne({
+      memberId,
+      date: { $gte: today, $lt: tomorrow },
+    });
+     if (member.profileImage && !member.profileImage.startsWith('http')) {
+      member.profileImage = `${req.protocol}://${req.get('host')}/${member.profileImage.replace(/\\/g, '/')}`;
+    }
+
+    if (alreadyMarked) {
+      return res.status(200).json({
+        message: 'Attendance already marked today',
+        alreadyMarked: true,
+        member,
+      });
+    }
 
     const newAttendance = new Attendance({
       memberId,
-      marked_by,
-      date: attendanceDate,
-      status
+      date: new Date(),
+      status: 'present',
+      marked_by: req.user?.id || null, 
     });
 
     await newAttendance.save();
 
     res.status(201).json({
-      message: "Attendance marked successfully",
-      attendance: {
-        id: newAttendance._id,
-        memberId: newAttendance.memberId,
-        marked_by: newAttendance.marked_by,
-        date: newAttendance.date,
-        status: newAttendance.status,
-      }
+      message: 'Attendance marked successfully',
+      attendance: newAttendance,
+      member,
     });
-
   } catch (error) {
-    console.error("Error marking attendance:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('❌ Error marking attendance:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+
 
    
 export const getAllAttendance = async (req, res) => {
@@ -68,7 +76,7 @@ export const getAttendanceById = async (req, res) => {
 
   try {
     const attendanceRecords = await Attendance.find({ memberId: id })
-      .sort({ date: -1 }) // newest first
+      .sort({ date: -1 }) 
       .populate('memberId', 'name email');
 
     if (attendanceRecords.length === 0) {
@@ -77,10 +85,11 @@ export const getAttendanceById = async (req, res) => {
 
     res.status(200).json(attendanceRecords);
   } catch (error) {
-    console.error("Error fetching attendance records:", error);
+    console.error("❌ Error fetching attendance records:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 export const updateAttendance = async (req, res) => {
